@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-rescue
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels: {app: node-rescue}
+  template:
+    metadata:
+      labels: {app: node-rescue}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: web
+          image: python:3.14-alpine@sha256:5862d971d1f0ae26b258cefa4e893556b1d3aba81bd2ff30888704ad378bab67
+          command: [python, -B, -m, http.server, '8080', --bind, '0.0.0.0', --directory, /web]
+          ports:
+            - {name: http, containerPort: 8080}
+          resources:
+            requests: {cpu: 10m, memory: 32Mi}
+            limits: {cpu: 200m, memory: 96Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          readinessProbe:
+            httpGet: {path: /, port: http}
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /, port: http}
+            periodSeconds: 15
+          volumeMounts:
+            - {name: web, mountPath: /web, readOnly: true}
+      volumes:
+        - name: web
+          configMap: {name: node-rescue-web}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-rescue
+spec:
+  selector: {app: node-rescue}
+  ports:
+    - {name: http, port: 80, targetPort: http}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: node-rescue
+spec:
+  ingressClassName: gated
+  tls:
+    - hosts: [node-rescue.penelope.work]
+      secretName: node-rescue-penelope-work-tls
+  rules:
+    - host: node-rescue.penelope.work
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: node-rescue
+                port: {number: 80}
+---
+apiVersion: gate.unstable.cloud/v1alpha1
+kind: NetworkRole
+metadata:
+  name: node-rescue
+spec:
+  targetRef: {name: node-rescue}
+  rules:
+    - paths: ['*']
+      methods: [GET, HEAD]
+---
+apiVersion: gate.unstable.cloud/v1alpha1
+kind: NetworkRoleBinding
+metadata:
+  name: node-rescue
+spec:
+  roleRef: {name: node-rescue}
+  subjects:
+    - {name: 'github:yuanying'}
+    - {name: 'github:masayukig'}
+    - {name: 'github:atoato88'}
+    - {name: 'github:oomichi'}
+    - {name: 'github:yuuichi-fujioka'}
+    - {name: 'system:serviceaccount:natsumi:natsumi-penelope'}

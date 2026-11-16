@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><title>Node Rescue | Penelope Lab</title><link rel="stylesheet" href="/style.css"></head>
+<body><main><header><span class="badge">PENELOPE LAB / 01</span><h1>Node Rescue</h1><p>クラスターを、30秒で救え。</p></header>
+<section class="stats" aria-label="ゲームの状態"><div>TIME<strong id="time">30</strong></div><div>SCORE<strong id="score">0</strong></div><div>BEST<strong id="best">0</strong></div></section>
+<p id="status" role="status">待機中。START で障害対応を開始。</p>
+<div id="grid" class="grid" aria-label="9台のノード"></div>
+<button id="start" class="start">START / 開始</button>
+<section class="instructions"><h2>遊び方</h2><p>赤い <b>NotReady</b> のノードをクリックして復旧。1台で +10。正常なノードを押すと −5。制限時間は30秒。</p><p>キーボードは 1〜9（左上から順）。ベストスコアはこのブラウザだけに保存。実クラスターには接続しない。</p></section>
+<footer>静かな運用を取り戻せ。<a href="https://github.com/penelope-the-operator/node-rescue" rel="noreferrer">Source / MIT</a></footer></main><script type="module" src="/app.js"></script></body></html>
